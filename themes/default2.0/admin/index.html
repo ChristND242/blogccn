@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Backend du blog CCN</title>
+    <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/gdtool/zhaopp/cfblog/favicon.ico" />
+	<link rel="shortcut icon" type="image/x-icon"  href="https://cdn.jsdelivr.net/gh/gdtool/zhaopp/cfblog/favicon.ico"/>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/examples/css/style.css" />-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/css/editormd.css" />
+    <link rel="stylesheet" href="https://cdn.staticfile.org/bootstrap-select/1.9.4/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+    
+    <script src="https://cdn.staticfile.org/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/i18n/defaults-zh_CN.min.js"></script>
+	<style>
+		.bootstrap-select>.dropdown-toggle {
+		z-index:auto;
+		}
+	</style>
+	
+</head>
+<body>
+
+<nav class="navbar navbar-default " role="navigation">
+	<div class="container-fluid">
+
+	<div>
+		<ul id="myTab" class="nav nav-tabs">
+			<li>
+				<a href="/" >CF-blog</a>
+			</li>
+			<li>
+				<a href="#list" data-toggle="tab">Mes articles</a>
+			</li>
+			<li  class="active">
+				<a href="#new" data-toggle="tab">Nouveau</a>
+			</li>
+			<li>
+				<a href="#config" data-toggle="tab">Parametres</a>
+			</li>
+			<li>
+				<a href="#pub" data-toggle="tab">Publication</a>
+			</li>
+		</ul>
+	</div>
+	</div>
+</nav>
+<div id="myTabContent" class="tab-content" style="padding-top: 60px;">
+	<div class="tab-pane fade" id="list">
+		<div class="container" >
+			<table class="table  table-striped" id="articleList">
+				  <tr><td>ID</td><td>titre</td><td>date de création</td></tr>
+			</table>
+			<input type="hidden"  name="page" id="page" value='1'>
+			<a id="loadmore" class="btn btn-default">charger plus...</a>
+		</div> 
+	</div>
+	<div class="tab-pane fade in active" id="new">
+		<div class="container">
+			<h3 id="labelNew">Nouveau</h3>   
+			<form id="addNewForm"  class="form-inline" >
+				<div class="form-group" style="width: 98%">
+					<input type="hidden" class="form-control" name="id" id="id" >
+					<input type="text" class="form-control" name="title" id="title" placeholder="标题" style="width: 100%;" required="true">
+				</div>
+				<div class="form-group">
+					<label for="exampleInputEmail2">Image en vedette</label>
+					<input type="url" class="form-control" style="width: 400px;"  name="img" id="img" placeholder="" >
+				</div>
+				<div class="form-group">
+					<label for="exampleInputEmail2">Lien permanent</label>
+					<input type="text" class="form-control" name="link" id="link" placeholder="" required="true">
+				</div>
+				<div class="form-group">
+					<label for="exampleInputEmail2">Date de création</label>
+					<input type="datetime-local" class="form-control" id="createDate" name="createDate" placeholder=""  required="true">
+				</div>
+				<div class="form-group">
+					<label for="exampleInputEmail2">Classification</label>
+					<select class="selectpicker" multiple name="category[]" id="category">
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="exampleInputEmail2">Étiquette</label>
+					<input type="text" class="form-control" name="tags" id="tags" placeholder="étiquette 1, étiquette 2">
+				</div>
+				<div class="form-group">
+					<label for="exampleInputEmail2">Poids</label>
+					<input type="text" class="form-control" name="priority" id="priority" value='0.5' placeholder="poids">
+				</div>
+				<div class="form-group">
+					<label for="exampleInputEmail2">Fréquence de mise à jour</label>
+					    <select class="form-control" id="changefreq" name="changefreq">
+						<option value="daily" selected  = "selected" >tous les jours</option>
+						<option value="hourly" >horaire</option>
+						<option value="weekly" >hebdomadaire</option>
+						<option value="monthly" >mensuelle</option>
+						<option value="yearly" >annuelle</option>
+						<option value="never" >jamais</option>
+						<option value="always" >toujours</option>
+					    </select>
+				</div>
+					<a  tabindex="0"  role="button"  type="submit" id="btn_saveAddNew" class="btn btn-default" onclick="saveAddNew()">sauvegarder</a>
+					
+				<div id="content"><textarea style="display:none;"></textarea></div>
+			</form>
+		</div>
+	</div>
+	
+	<div class="tab-pane fade" id="config">
+		
+		<div class="container" >
+			<form id="configForm" role="form" >
+				<div class="form-group">
+				    <label for="name">Catégorie, par exemple : <code>["Catégorie A", "Catégorie B", "Catégorie C", "Catégorie D"]</code></label>
+					<textarea class="form-control" id="WidgetCategory" name="WidgetCategory" rows="3" placeholder='["CatégorieA","CatégorieB"]'></textarea>
+				</div>
+	
+				<div class="form-group">
+				    <label for="name">Menu, par exemple : <code>[{"title": "Article technique", "url": "/category/Article technique"}, {"title": "Gestion", "url": "/admin"} ]</code></label>
+					<textarea class="form-control" id="WidgetMenu" name="WidgetMenu" rows="5"  placeholder='[
+	{"title":"ManuA"	,"url":"/category/MenuA"},
+	{"title":"MenuB"	,"url":"/category/MenuB"}
+]'></textarea>
+				</div>
+				<div class="form-group">
+				    <label for="name">Autres liens, par exemple : <code>[{"title":"Pona Ekolo","url":"https://forum.ponaekolo.me/"},{"title":"Google","url" :"https://www.google.com/"}]</code></label>
+					<textarea class="form-control" id="WidgetLink" name="WidgetLink" rows="5"  placeholder='[
+	{"title":"Pona EKolo"	,"url":"https://forum.ponaekolo.me/"},
+	{"title":"Google"	,"url":"https://www.google.com/"}
+]'></textarea>
+				</div>
+				<a  tabindex="0"  role="button"  type="submit" id="btn_saveConfig" class="btn btn-default" onclick="saveConfig()">sauvegarder</a>
+			</form>
+			
+
+			<form id="importForm" role="form" >
+				<div class="form-group">
+				    <label for="name">Exporter/Importer</label>
+					<textarea class="form-control" id="importJson" name="importJson" rows="3" placeholder="Copiez le json d'exportation complet"></textarea>
+				</div>
+
+				<a  tabindex="0"  role="button"  type="submit" id="btn_import" class="btn btn-default" onclick="importBlog()">Importer</a>
+				<a  tabindex="0"  role="button"  type="submit" id="btn_export" class="btn btn-default"  href="/admin/export/" >Exporter</a>
+			</form>
+
+			
+		</div>
+	</div>
+
+	<div class="tab-pane fade" id="pub">
+		<div class="container" >
+			<div class="jumbotron" >
+				<p class="lead">
+				Étant donné que le front-end utilise la mise en cache, les opérations suivantes doivent être publiées : création de nouveaux articles, publication d'articles, modification de la configuration en arrière-plan, modification de la configuration des W.</br>
+				Pour que le frontal prenne effet, ctrl+F5 est requis pour forcer une actualisation.
+				</p>
+				
+				<a href="#" class="btn btn-default" onclick="publish()">Publier</a>
+			</div>
+		</div>
+	</div>	
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/editormd.js"></script>   
+<script type="text/javascript">
+	$(function() {
+		$('#myTab li:eq(0) 1').tab('show');
+		//Obtenir la catégorie
+		var categoryJson = <!--{categoryJson}-->;
+		//Obtenir le menu
+		var menuJson = <!--{menuJson}-->;
+		var linkJson = <!--{linkJson}-->;
+		var mdEditor = editormd("content", {
+				// width  : "90%",
+				 height : 640,
+				path   : "https://cdn.jsdelivr.net/npm/editor.md@1.5.0/lib/",
+				appendMarkdown : "# MarkDown", 
+				saveHTMLToTextarea : true,
+				mode : "markdown",
+				tex  : true,
+				tocm : true, 
+				codeFold : true
+			});
+		//affectation de formulaire
+		$('#createDate').val(new Date());
+		
+		$('#WidgetCategory').val(JSON.stringify(categoryJson));
+		$('#WidgetMenu').val(JSON.stringify(menuJson));
+		$('#WidgetLink').val(JSON.stringify(linkJson));
+		var category = $('#category');
+		category.empty();
+		for (var i = 0; i < categoryJson.length; i++) {
+			category.append('<option id=' + categoryJson[i] + ' value=' + categoryJson[i] + '>' + categoryJson[i] + '</option>');
+		}
+		$("#loadmore").click();//Chargement initial d'une page
+	});
+    //Charger la liste des articles	
+    $("#loadmore").click(function(){
+        var page=$("#page").val();
+        $.ajax({
+            url:"/admin/getList/" + page + "/",
+            type:'GET',
+            dataType:"json",
+            //data:{"page":page,"typeid":typeid},
+            success:function(data){
+    
+                    tableContent="";
+                    $.each(data,function(i){
+                        var Info = data[i];
+                        var num = i+1;
+                        tableContent += '<tr><td>'+Info.id+'</td><td><a href="/admin/edit/'+Info.id+'/">'+Info.title+'</a></td><td>'+Info.createDate.replace("T","")+'</td></tr>';
+     
+                    })
+                    $("#articleList").append(tableContent);
+                    $("#page").val(++page);
+      
+            }
+        });
+    })
+    //Créer un nouvel article
+    function saveAddNew(){
+        if(
+            $('#WidgetMenu').val() == "" || $('#WidgetMenu').val() == null
+            || $('#createDate').val() == "" || $('#createDate').val() == null
+            || $('#createDate').val() == "" || $('#createDate').val() == null
+        
+        ){
+           alert("Informations incomplètes");
+           return;
+            
+        }
+        var postURL = "/admin/saveEdit/";
+        if ($('#id').val() == "" || $('#id').val() == null)
+            postURL=  "/admin/saveAddNew/";
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: postURL ,//url
+			contentType: "application/json; charset=utf-8",
+			data: JSON.stringify($("#addNewForm").serializeArray()), 
+            success: function (result) {
+                if ("id" in result){
+                    $('#id').val(result.id);
+					$('#labelNew').text("modifier:"+result.id);
+                    alert(result.msg);
+                }
+                else 
+                {
+					alert("échec");
+				}
+            }
+        });
+    }
+    //Enregistrer les paramètres
+    function saveConfig(){
+        if(!isJSON($('#WidgetCategory').val()))
+        {
+            alert("Erreur de format de catégorie"); 
+            return false;
+        }
+        if(!isJSON($('#WidgetMenu').val()))
+        {
+            alert("Erreur de format du menu"); 
+            return false;
+        }
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+			contentType: "application/json; charset=utf-8",
+            url: "/admin/saveConfig/" ,//url
+			data: JSON.stringify($("#configForm").serializeArray()), 
+            success: function (result) {
+                alert(result.msg);
+            }
+        });
+    }
+    //Importer JSON
+    function importBlog(){
+        if(!isJSON($('#importJson').val()))
+        {
+            alert("Erreur de format d'importation"); 
+            return false;
+        }
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+			contentType: "application/json; charset=utf-8",
+            url: "/admin/import/" ,//url
+			data: JSON.stringify($("#importForm").serializeArray()), 
+            success: function (result) {
+                alert(result.msg);
+            }
+        });
+    }
+    //发布
+    function publish(){
+        if (confirm("Êtes-vous sûr ? Publier nettoiera tous les caches statiques et régénérera")==false){ 
+            return false; 
+          }
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+			contentType: "application/json; charset=utf-8",
+            url: "/admin/publish/" ,//url
+            success: function (result) {
+                alert(result.msg);
+            }
+        });
+    }
+    function isJSON(str) {
+        if (typeof str == 'string') {
+            try {
+                var obj=JSON.parse(str);
+                if(typeof obj == 'object' && obj ){
+                    return true;
+                }else{
+                    return false;
+                }
+    
+            } catch(e) {
+               // console.log('error：'+str+'!!!'+e);
+                return false;
+            }
+        }
+        return false;
+    }
+</script>
+ 
+
+</body>
+
+</html>
